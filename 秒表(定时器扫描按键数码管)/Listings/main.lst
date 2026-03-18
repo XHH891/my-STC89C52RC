@@ -1,0 +1,221 @@
+C51 COMPILER V9.54   MAIN                                                                  02/02/2026 18:03:08 PAGE 1   
+
+
+C51 COMPILER V9.54, COMPILATION OF MODULE MAIN
+OBJECT MODULE PLACED IN .\Objects\main.obj
+COMPILER INVOKED BY: D:\keil5\k\C51\BIN\C51.EXE main.c OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTEND PRINT(.\Listings\main
+                    -.lst) TABS(2) OBJECT(.\Objects\main.obj)
+
+line level    source
+
+   1          #include <REGX52.H>
+   2          
+   3          void Timer0_Init();
+   4          
+   5          /*按键相关函数*/
+   6          unsigned char key();
+   7          unsigned char Keyr();
+   8          void key_loop();
+   9          unsigned char keyo=0;
+  10          
+  11          /*数码管显示相关函数*/
+  12          void nixie(unsigned char a,b);
+  13          void n_loop(void);
+  14          void nixie_setbuf(unsigned char a,b);
+  15          unsigned char n_buf[9]={0,10,10,10,10,10,10,10,10};
+  16          
+  17          /*时间相关函数*/
+  18          void sec_loop();
+  19          unsigned char min=0,sec=0,minisec=0;
+  20          unsigned char f=0;
+  21          
+  22          void main()
+  23          {
+  24   1        unsigned char keynum;
+  25   1        
+  26   1          
+  27   1        Timer0_Init();
+  28   1        while(1)
+  29   1        {
+  30   2          keynum = key();
+  31   2          if(keynum == 1)
+  32   2          {
+  33   3            f = !f;
+  34   3          }
+  35   2          if(keynum == 2)
+  36   2          {
+  37   3            min=0;
+  38   3            sec=0;
+  39   3            minisec=0;
+  40   3          }
+  41   2          nixie_setbuf(1,min/10);
+  42   2          nixie_setbuf(2,min%10);
+  43   2          nixie_setbuf(3,11);
+  44   2          nixie_setbuf(4,sec/10);
+  45   2          nixie_setbuf(5,sec%10);
+  46   2          nixie_setbuf(6,11);
+  47   2          nixie_setbuf(7,minisec/10);
+  48   2          nixie_setbuf(8,minisec%10);
+  49   2        }
+  50   1      }
+  51          
+  52          /*时间相关----------------------*/
+  53          void sec_loop()
+  54          {
+C51 COMPILER V9.54   MAIN                                                                  02/02/2026 18:03:08 PAGE 2   
+
+  55   1        if(f)
+  56   1        {
+  57   2          minisec++;
+  58   2          if(minisec >= 100)
+  59   2          {
+  60   3            minisec = 0;
+  61   3            sec++;
+  62   3            if(sec>60)
+  63   3            {
+  64   4              sec = 0;
+  65   4              min++;
+  66   4              if(min>60)
+  67   4              {
+  68   5                min = 0;
+  69   5              }
+  70   4            }
+  71   3          }
+  72   2        }
+  73   1      
+  74   1      }
+  75          /*-------------------------------*/
+  76          
+  77          /*数码管相关----------------------*/
+  78          void nixie_setbuf(unsigned char a,b)
+  79          {
+  80   1        n_buf[a] = b;
+  81   1      }
+  82          
+  83          void nixie(unsigned char a,b)
+  84          {
+  85   1        unsigned char seg_code[] = {0x3F, 0x06, 0x5B, 0x4F, 0x66, 0x6D, 0x7D, 0x07, 0x7F, 0x6F,0x00,0x40};
+  86   1        P0=0x00;
+  87   1        
+  88   1        a = 8-a;
+  89   1        P2_2 = a % 2;
+  90   1        a = a / 2;
+  91   1        P2_3 = a % 2;
+  92   1        a = a / 2;
+  93   1        P2_4 = a % 2;
+  94   1        a = a / 2;
+  95   1      
+  96   1        P0 = seg_code[b];
+  97   1      }
+  98          
+  99          void n_loop(void)
+ 100          {
+ 101   1        static unsigned char i;
+ 102   1        nixie(i,n_buf[i]);
+ 103   1        i++;
+ 104   1        if(i>=9)
+ 105   1          i=1;
+ 106   1      }
+ 107          /*-------------------------------*/
+ 108          
+ 109          /*按键相关----------------------*/
+ 110          unsigned char key()
+ 111          {
+ 112   1        unsigned char temp=0;
+ 113   1        temp = keyo;
+ 114   1        keyo = 0;
+ 115   1        return temp;
+ 116   1      }
+C51 COMPILER V9.54   MAIN                                                                  02/02/2026 18:03:08 PAGE 3   
+
+ 117          
+ 118          unsigned char Keyr()
+ 119          {
+ 120   1        unsigned char KeyNumber=0;
+ 121   1        if(P3_1==0) {KeyNumber=1;}
+ 122   1        if(P3_0==0) {KeyNumber=2;}
+ 123   1        if(P3_2==0) {KeyNumber=3;}
+ 124   1        if(P3_3==0) {KeyNumber=4;}
+ 125   1        return KeyNumber;
+ 126   1      }
+ 127          
+ 128          void key_loop(void)
+ 129          {
+ 130   1        static unsigned char nowstate,laststate;
+ 131   1        
+ 132   1        laststate = nowstate;
+ 133   1        nowstate = Keyr();
+ 134   1        if(laststate==1 && nowstate==0)
+ 135   1        {
+ 136   2          keyo = 1;
+ 137   2        }
+ 138   1        if(laststate==2 && nowstate==0)
+ 139   1        {
+ 140   2          keyo = 2;
+ 141   2        }
+ 142   1        if(laststate==3 && nowstate==0)
+ 143   1        {
+ 144   2          keyo = 3;
+ 145   2        }
+ 146   1        if(laststate==4 && nowstate==0)
+ 147   1        {
+ 148   2          keyo = 4;
+ 149   2        }
+ 150   1      }
+ 151          /*-------------------------------*/
+ 152          
+ 153          unsigned int Tk=0,Tn=0,T=0;
+ 154          void Timer0_Routine(void) interrupt 1
+ 155          {
+ 156   1        TL0 = 0x66;       //设置定时初始值
+ 157   1        TH0 = 0xFC;       //设置定时初始值
+ 158   1        Tk++;
+ 159   1        Tn++;
+ 160   1        T++;
+ 161   1        if(Tk >= 20)
+ 162   1        {
+ 163   2          Tk = 0;
+ 164   2          key_loop();
+ 165   2        } 
+ 166   1        if(Tn >= 2)
+ 167   1        {
+ 168   2          Tn = 0;
+ 169   2          n_loop();
+ 170   2        }
+ 171   1        if(T >= 10)
+ 172   1        {
+ 173   2          T = 0;
+ 174   2          sec_loop();
+ 175   2        }
+ 176   1      }
+ 177          
+ 178          void Timer0_Init()
+C51 COMPILER V9.54   MAIN                                                                  02/02/2026 18:03:08 PAGE 4   
+
+ 179          {
+ 180   1        //AUXR &= 0x7F;     //定时器时钟12T模式
+ 181   1        TMOD &= 0xF0;       //设置定时器模式
+ 182   1        TMOD |= 0x01;     //设置定时器模式
+ 183   1        TL0 = 0x66;       //设置定时初始值
+ 184   1        TH0 = 0xFC;       //设置定时初始值
+ 185   1        TF0 = 0;        //清除TF0标志
+ 186   1        TR0 = 1;        //定时器0开始计时
+ 187   1        //中断操作
+ 188   1        ET0 = 1;
+ 189   1        EA = 1;
+ 190   1        PT0 = 0;
+ 191   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    535    ----
+   CONSTANT SIZE    =     12    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =     23      15
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

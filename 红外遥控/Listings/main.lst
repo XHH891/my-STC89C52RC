@@ -1,0 +1,106 @@
+C51 COMPILER V9.54   MAIN                                                                  02/25/2026 10:14:52 PAGE 1   
+
+
+C51 COMPILER V9.54, COMPILATION OF MODULE MAIN
+OBJECT MODULE PLACED IN .\Objects\main.obj
+COMPILER INVOKED BY: D:\keil5\k\C51\BIN\C51.EXE main.c OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTEND PRINT(.\Listings\main
+                    -.lst) TABS(2) OBJECT(.\Objects\main.obj)
+
+line level    source
+
+   1          #include <REGX52.H>
+   2          #include "LCD1602.H"
+   3          
+   4          unsigned char Num;
+   5          
+   6          void Int0_Init();//外部中断
+   7          void timer0_setcounter(unsigned int value);
+   8          unsigned int timer0_getcounter(void);
+   9          void timer0_run(unsigned char flag);
+  10          
+  11          void Delay(unsigned int a)
+  12          {
+  13   1        unsigned char i,j;
+  14   1      
+  15   1        while(a)
+  16   1        {
+  17   2          i = 4;
+  18   2          j = 239;
+  19   2      
+  20   2            do
+  21   2            {
+  22   3              while(--j);
+  23   3            }while(--i);
+  24   2          a--;
+  25   2        }
+  26   1      }
+  27          
+  28          void main()
+  29          {
+  30   1          LCD_Init();
+  31   1          LCD_ShowString(1,1,"A");
+  32   1        
+  33   1          Int0_Init();
+  34   1          timer0_setcounter(0);
+  35   1          timer0_run(1);
+  36   1          Delay(10);
+  37   1          Num = timer0_getcounter();
+  38   1          LCD_ShowNum(2,1,Num,3);
+  39   1          while(1)
+  40   1          {
+  41   2              
+  42   2          }
+  43   1          
+  44   1      }
+  45          
+  46          void Int0_Init()//外部中断
+  47          {
+  48   1          TMOD &= 0xf0;
+  49   1          TMOD |= 0x01;
+  50   1          TL0 = 0;
+  51   1          TH0 = 0;
+  52   1          TF0 = 0;
+  53   1          TR0 = 0;
+  54   1          //IT0 = 1;
+C51 COMPILER V9.54   MAIN                                                                  02/25/2026 10:14:52 PAGE 2   
+
+  55   1          //IE0 = 0;
+  56   1          //EX0 = 1;
+  57   1          //EA = 1;
+  58   1          //PX0 = 1;
+  59   1      }
+  60          
+  61          void timer0_setcounter(unsigned int value)
+  62          {
+  63   1          TH0 = value/256;
+  64   1          TL0 = value%256;
+  65   1      }
+  66          
+  67          unsigned int timer0_getcounter(void)
+  68          {
+  69   1          return (TH0<<8)|TL0;
+  70   1      }
+  71          
+  72          void timer0_run(unsigned char flag)
+  73          {
+  74   1          TR0 = flag;
+  75   1      }
+  76          
+  77          void Int0_Routine(void) interrupt 0
+  78          {
+  79   1          Num++;
+  80   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    123    ----
+   CONSTANT SIZE    =      2    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =      1    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

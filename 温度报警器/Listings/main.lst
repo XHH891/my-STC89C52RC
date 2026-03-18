@@ -1,0 +1,472 @@
+C51 COMPILER V9.54   MAIN                                                                  02/09/2026 16:13:09 PAGE 1   
+
+
+C51 COMPILER V9.54, COMPILATION OF MODULE MAIN
+OBJECT MODULE PLACED IN .\Objects\main.obj
+COMPILER INVOKED BY: D:\keil5\k\C51\BIN\C51.EXE main.c OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTEND PRINT(.\Listings\main
+                    -.lst) TABS(2) OBJECT(.\Objects\main.obj)
+
+line level    source
+
+   1          #include <REGX52.H>
+   2          #include "LCD1602.H"
+   3          
+   4          /************************* ROM 指令集 *************************/
+   5          #define DS18B20_CMD_SEARCH_ROM      0xF0   // 搜索ROM
+   6          #define DS18B20_CMD_READ_ROM        0x33   // 读ROM
+   7          #define DS18B20_CMD_MATCH_ROM       0x55   // 匹配ROM
+   8          #define DS18B20_CMD_SKIP_ROM        0xCC  // 跳过ROM
+   9          #define DS18B20_CMD_ALARM_SEARCH    0xEC   // 报警搜索
+  10          
+  11          /************************* 功能指令集 *************************/
+  12          #define DS18B20_CMD_CONVERT_T        0x44  // 温度转换
+  13          #define DS18B20_CMD_WRITE_SCRATCHPAD 0x4E  // 写暂存器
+  14          #define DS18B20_CMD_READ_SCRATCHPAD  0xBE  // 读暂存器
+  15          #define DS18B20_CMD_COPY_SCRATCHPAD  0x48  // 复制暂存器到EEPROM
+  16          #define DS18B20_CMD_RECALL_E2        0xB8  // 从EEPROM召回数据
+  17          #define DS18B20_CMD_READ_POWER_SUPPLY 0xB4 // 读供电模式
+  18          
+  19          #define a_address 0xA0  //at24c04的地址
+  20          
+  21          sbit DQ = P3^7;
+  22          sbit I2C_SCL = P2^1;
+  23          sbit I2C_SDA = P2^0;
+  24          
+  25          /*-----------单总线相关函数---------*/
+  26          unsigned char onewire_init();
+  27          void one_sendbit(unsigned char Bit);//写1或者0  
+  28          unsigned char one_receivebit();//读1或者0
+  29          void one_sendbyte(unsigned char Byte);//写整个字节
+  30          unsigned char one_receivebyte();//读整个字节
+  31          /*===========单总线相关函数===========*/
+  32          
+  33          /*----------DS18B20相关函数----------*/
+  34          void ds18b20_convertT();//触发温度转换
+  35          float ds18b20_readt();//读取温度
+  36          /*==========DS18B20相关函数===========*/
+  37          
+  38          /*----------按键相关函数-------------*/
+  39          unsigned char keyo=0;
+  40          unsigned char key();
+  41          unsigned char Keyr();
+  42          void key_loop();
+  43          /*===========按键相关函数=============*/
+  44          
+  45          /*-----------I2C相关函数---------------*/
+  46          void i2c_start(void);//发送接收的S表示开始
+  47          void i2c_stop(void);//发送接收的P表示停止
+  48          void i2c_semdbyte(unsigned char byte);//写入一个字节
+  49          unsigned char i2c_receivebyte(void);//接收一个字节
+  50          void i2c_sendack(unsigned char abit);//发送应答
+  51          unsigned char i2c_receiveack();//接收应答
+  52          /*===========I2C相关函数===============*/
+  53          
+  54          /*----------at24c04_wb相关函数---------*/
+C51 COMPILER V9.54   MAIN                                                                  02/09/2026 16:13:09 PAGE 2   
+
+  55          void at24c04_wb(unsigned char wa,Data);//对at24c04写一个字节
+  56          unsigned char at24c04_rb(unsigned char wa);//对at24c04读一个字节  wa表示寄存器
+  57          /*==========at24c04_wb相关函数=========*/
+  58          
+  59          /*-----------中断相关函数--------------*/
+  60          void Timer0_Init();
+  61          /*============中断相关函数=============*/
+  62          
+  63          void Delay(unsigned int a); 
+  64          
+  65          void main()
+  66          {
+  67   1        float T;//存储温度
+  68   1        char tl,th;//保存低温报警和高温报警阈值
+  69   1        unsigned char knum;//保存按键
+  70   1        
+  71   1        th=at24c04_rb(0);
+  72   1        tl=at24c04_rb(1);
+  73   1        if(th>125 || tl<-55 || th<=tl)
+  74   1        {
+  75   2            th=20;
+  76   2            tl=15;
+  77   2        }
+  78   1        
+  79   1        LCD_Init();
+  80   1        Timer0_Init();
+  81   1        
+  82   1        LCD_ShowString(1,1,"T:");
+  83   1        LCD_ShowString(2,1,"TH:");
+  84   1        LCD_ShowString(2,9,"TL:");
+  85   1        LCD_ShowSignedNum(2,4,th,3);
+  86   1        LCD_ShowSignedNum(2,12,tl,3);
+  87   1        
+  88   1        while(1)
+  89   1        {
+  90   2          knum = key();
+  91   2          
+  92   2          ds18b20_convertT();
+  93   2          T = ds18b20_readt();
+  94   2          
+  95   2          if(knum)
+  96   2          {
+  97   3              if(knum == 1)
+  98   3              {
+  99   4                  th++;
+ 100   4                  if(th>125){th=125;}
+ 101   4              }
+ 102   3              if(knum == 2)
+ 103   3              {
+ 104   4                  th--;
+ 105   4                  if(th<=tl){th++;}
+ 106   4              }
+ 107   3              if(knum == 3)
+ 108   3              {
+ 109   4                  tl++;
+ 110   4                  if(tl>=th){tl--;}
+ 111   4              }
+ 112   3              if(knum == 4)
+ 113   3              {
+ 114   4                  tl--;
+ 115   4                  if(tl<=-155){tl=-55;}
+ 116   4              }
+C51 COMPILER V9.54   MAIN                                                                  02/09/2026 16:13:09 PAGE 3   
+
+ 117   3              LCD_ShowSignedNum(2,4,th,3);
+ 118   3              LCD_ShowSignedNum(2,12,tl,3);
+ 119   3              
+ 120   3              at24c04_wb(0,th);
+ 121   3              Delay(5); 
+ 122   3              at24c04_wb(1,tl);
+ 123   3              Delay(5); 
+ 124   3          }
+ 125   2          if(T>th)
+ 126   2          {
+ 127   3            LCD_ShowString(1,13,"OV:H");
+ 128   3          }
+ 129   2          else if(T<tl)
+ 130   2          {
+ 131   3            LCD_ShowString(1,13,"OV:L");
+ 132   3          }
+ 133   2          else
+ 134   2          {
+ 135   3            LCD_ShowString(1,13,"    ");
+ 136   3          }
+ 137   2          
+ 138   2          if(T<0)
+ 139   2          {
+ 140   3            LCD_ShowChar(1,3,'-');
+ 141   3            T=-T;
+ 142   3          }
+ 143   2          else
+ 144   2            LCD_ShowChar(1,3,'+');
+ 145   2          
+ 146   2          LCD_ShowNum(1,4,T,3);
+ 147   2          LCD_ShowChar(1,7,'.');
+ 148   2          LCD_ShowNum(1,8,(unsigned long)(T*100)%100,2);
+ 149   2          
+ 150   2        }
+ 151   1      }
+ 152          
+ 153          /*----------按键相关函数-------------*/
+ 154          unsigned char key()
+ 155          {
+ 156   1        unsigned char temp=0;
+ 157   1        temp = keyo;
+ 158   1        keyo = 0;
+ 159   1        return temp;
+ 160   1      }
+ 161          
+ 162          unsigned char Keyr()
+ 163          {
+ 164   1        unsigned char KeyNumber=0;
+ 165   1        if(P3_1==0) {KeyNumber=1;}
+ 166   1        if(P3_0==0) {KeyNumber=2;}
+ 167   1        if(P3_2==0) {KeyNumber=3;}
+ 168   1        if(P3_3==0) {KeyNumber=4;}
+ 169   1        return KeyNumber;
+ 170   1      }
+ 171          
+ 172          void key_loop(void)
+ 173          {
+ 174   1        static unsigned char nowstate,laststate;
+ 175   1        
+ 176   1        laststate = nowstate;
+ 177   1        nowstate = Keyr();
+ 178   1        if(laststate==1 && nowstate==0)
+C51 COMPILER V9.54   MAIN                                                                  02/09/2026 16:13:09 PAGE 4   
+
+ 179   1        {
+ 180   2          keyo = 1;
+ 181   2        }
+ 182   1        if(laststate==2 && nowstate==0)
+ 183   1        {
+ 184   2          keyo = 2;
+ 185   2        }
+ 186   1        if(laststate==3 && nowstate==0)
+ 187   1        {
+ 188   2          keyo = 3;
+ 189   2        }
+ 190   1        if(laststate==4 && nowstate==0)
+ 191   1        {
+ 192   2          keyo = 4;
+ 193   2        }
+ 194   1      }
+ 195          /*===========按键相关函数=============*/
+ 196          
+ 197          /*----------DS18B20相关函数----------*/
+ 198          void ds18b20_convertT(void)//触发温度转换
+ 199          {
+ 200   1          onewire_init();
+ 201   1          one_sendbyte(DS18B20_CMD_SKIP_ROM);
+ 202   1          one_sendbyte(DS18B20_CMD_CONVERT_T);
+ 203   1      }
+ 204          
+ 205          float ds18b20_readt(void)//读取温度
+ 206          {
+ 207   1          unsigned char tlsb,tmlb;
+ 208   1          int temp;
+ 209   1          float t;
+ 210   1          onewire_init();//单总线初始化：建立通信的前提
+ 211   1          one_sendbyte(DS18B20_CMD_SKIP_ROM);
+ 212   1          one_sendbyte(DS18B20_CMD_READ_SCRATCHPAD);//告诉传感器 “要读温度数据了”
+ 213   1          tlsb = one_receivebyte();// 先读低8位（暂存器第0字节）
+ 214   1          tmlb = one_receivebyte();// 后读高8位（暂存器第1字节）
+ 215   1          temp = (tmlb<<8)|tlsb;//把两个 8 位字节合成完整的温度数据
+ 216   1          t = temp/16.0;//把原始数据转换成可读的浮点温度
+ 217   1          return t;
+ 218   1      }
+ 219          
+ 220          
+ 221          /*============DS18B20相关函数========*/
+ 222          
+ 223          /*-----------单总线相关函数---------*/
+ 224          unsigned char onewire_init(void)//初始化
+ 225          {
+ 226   1          unsigned char i,ackbit;
+ 227   1        
+ 228   1          EA = 0;//防止被定时器按键扫描打断
+ 229   1        
+ 230   1          DQ = 1;
+ 231   1          DQ = 0;
+ 232   1          i = 227;while (--i);  //delay 500us
+ 233   1          DQ = 1;
+ 234   1          i = 29;while (--i); //delay 70us
+ 235   1          ackbit = DQ;
+ 236   1          i = 227;while (--i);  //delay 500us
+ 237   1        
+ 238   1          EA = 1;
+ 239   1        
+ 240   1          return ackbit;
+C51 COMPILER V9.54   MAIN                                                                  02/09/2026 16:13:09 PAGE 5   
+
+ 241   1      }
+ 242          
+ 243          void one_sendbit(unsigned char Bit)//写1或者0  若写1,则经过10微秒后从0变1;若写0,则DQ = Bit
+             -;为0,经过两段时延后写入
+ 244          {
+ 245   1          unsigned char i;
+ 246   1        
+ 247   1          EA = 0;//防止被定时器按键扫描打断
+ 248   1        
+ 249   1          DQ = 0;
+ 250   1          i = 4;while (--i);  //delay 10us
+ 251   1          DQ = Bit;
+ 252   1          i = 22;while (--i); //delay 50us
+ 253   1          DQ = 1;
+ 254   1          EA = 1;
+ 255   1      }
+ 256          
+ 257          unsigned char one_receivebit(void)//读1或者0
+ 258          {
+ 259   1          unsigned char i,Bit;
+ 260   1          
+ 261   1          EA = 0;//防止被定时器按键扫描打断
+ 262   1          
+ 263   1          DQ = 0;
+ 264   1          i = 2;while (--i);  //delay 5us
+ 265   1          DQ = 1;
+ 266   1          i = 2;while (--i);  //delay 5us
+ 267   1          Bit = DQ;
+ 268   1          i = 22;while (--i); //delay 50us
+ 269   1        
+ 270   1          EA = 1;
+ 271   1        
+ 272   1          return Bit;
+ 273   1      }
+ 274          
+ 275          void one_sendbyte(unsigned char Byte)//写整个字节
+ 276          {
+ 277   1          unsigned char i;
+ 278   1        
+ 279   1          for(i=0;i<8;i++)
+ 280   1          {
+ 281   2              one_sendbit(Byte&(0x01<<i));
+ 282   2          } 
+ 283   1      }
+ 284          
+ 285          unsigned char one_receivebyte(void)//读整个字节
+ 286          {
+ 287   1          unsigned char i,Byte=0x00;
+ 288   1          for(i=0;i<8;i++)
+ 289   1          {
+ 290   2              if(one_receivebit())
+ 291   2              {
+ 292   3                Byte |= (0x01<<i);
+ 293   3              }
+ 294   2          }
+ 295   1          return Byte;
+ 296   1      }
+ 297          /*===========单总线相关函数=============*/
+ 298          
+ 299          /*-----------I2C相关函数---------------*/
+ 300          void i2c_start(void)//发送接收的S 表示开始
+ 301          {
+C51 COMPILER V9.54   MAIN                                                                  02/09/2026 16:13:09 PAGE 6   
+
+ 302   1        I2C_SDA = 1;
+ 303   1        I2C_SCL = 1;
+ 304   1        I2C_SDA = 0;
+ 305   1        I2C_SCL = 0;
+ 306   1      }
+ 307          void i2c_stop(void)//发送接收的P 表示停止
+ 308          {
+ 309   1        I2C_SDA = 0;
+ 310   1        I2C_SCL = 1;
+ 311   1        I2C_SDA = 1;
+ 312   1      }
+ 313          void i2c_semdbyte(unsigned char byte)//写入一个字节
+ 314          {
+ 315   1        unsigned char i;
+ 316   1        for(i=0;i<8;i++)
+ 317   1        {
+ 318   2          I2C_SDA = (byte&(0x80>>i));
+ 319   2          I2C_SCL = 1;
+ 320   2          I2C_SCL = 0;
+ 321   2        }
+ 322   1      }
+ 323          unsigned char i2c_receivebyte(void)//接收一个字节
+ 324          {
+ 325   1        unsigned char i,byte=0x00;
+ 326   1        
+ 327   1        I2C_SDA = 1;
+ 328   1        for(i=0;i<8;i++)
+ 329   1        {
+ 330   2          I2C_SCL = 1;
+ 331   2          if(I2C_SDA)
+ 332   2            byte |= (0x80>>i); 
+ 333   2          I2C_SCL = 0;
+ 334   2        }
+ 335   1        return byte;
+ 336   1      }
+ 337          void i2c_sendack(unsigned char abit)//发送应答
+ 338          {
+ 339   1          I2C_SDA = abit;
+ 340   1          I2C_SCL = 0;
+ 341   1          I2C_SCL = 1;
+ 342   1      }
+ 343          unsigned char i2c_receiveack()//接收应答
+ 344          {
+ 345   1          unsigned char abit;
+ 346   1          I2C_SDA = 1;
+ 347   1          I2C_SCL = 1;
+ 348   1          abit = I2C_SDA;
+ 349   1          I2C_SCL = 0;
+ 350   1          return abit;
+ 351   1      }
+ 352          /*===========I2C相关函数===============*/
+ 353          
+ 354          /*----------at24c04_wb相关函数---------*/
+ 355          void at24c04_wb(unsigned char wa,Data)//对at24c04写一个字节  wa表示寄存器
+ 356          {
+ 357   1        i2c_start();
+ 358   1        i2c_semdbyte(a_address);
+ 359   1        i2c_receiveack();
+ 360   1        i2c_semdbyte(wa);
+ 361   1        i2c_receiveack();
+ 362   1        i2c_semdbyte(Data);
+ 363   1        i2c_receiveack();
+C51 COMPILER V9.54   MAIN                                                                  02/09/2026 16:13:09 PAGE 7   
+
+ 364   1        i2c_stop();
+ 365   1      }
+ 366          
+ 367          unsigned char at24c04_rb(unsigned char wa)//对at24c04读一个字节  wa表示寄存器
+ 368          {
+ 369   1        unsigned char Data;
+ 370   1        
+ 371   1        i2c_start();
+ 372   1        i2c_semdbyte(a_address);
+ 373   1        i2c_receiveack();
+ 374   1        i2c_semdbyte(wa);
+ 375   1        i2c_receiveack();
+ 376   1        
+ 377   1        i2c_start();
+ 378   1        i2c_semdbyte(a_address|0x01);//原本a_address表示写地址,将最后一位变为1,变为读地址
+ 379   1        i2c_receiveack();
+ 380   1        Data = i2c_receivebyte();
+ 381   1        i2c_sendack(1);
+ 382   1        
+ 383   1        i2c_stop();
+ 384   1        return Data;
+ 385   1      }
+ 386          /*==========at24c04_wb相关函数=========*/
+ 387          
+ 388          /*-----------中断相关函数--------------*/
+ 389          unsigned int time=0;
+ 390          void Timer0_Routine(void) interrupt 1
+ 391          {
+ 392   1        TL0 = 0x66;       //设置定时初始值
+ 393   1        TH0 = 0xFC;       //设置定时初始值
+ 394   1        time++;
+ 395   1        if(time >= 20)
+ 396   1        {
+ 397   2          time = 0;
+ 398   2          key_loop();
+ 399   2        } 
+ 400   1      }
+ 401          
+ 402          void Timer0_Init()
+ 403          {
+ 404   1        //AUXR &= 0x7F;     //定时器时钟12T模式
+ 405   1        TMOD &= 0xF0;       //设置定时器模式
+ 406   1        TMOD |= 0x01;     //设置定时器模式
+ 407   1        TL0 = 0x66;       //设置定时初始值
+ 408   1        TH0 = 0xFC;       //设置定时初始值
+ 409   1        TF0 = 0;        //清除TF0标志
+ 410   1        TR0 = 1;        //定时器0开始计时
+ 411   1        //中断操作
+ 412   1        ET0 = 1;
+ 413   1        EA = 1;
+ 414   1        PT0 = 0;
+ 415   1      }
+ 416          /*============中断相关函数=============*/
+ 417          
+ 418          void Delay(unsigned int a)
+ 419          {
+ 420   1        unsigned char i,j;
+ 421   1      
+ 422   1        while(a)
+ 423   1        {
+ 424   2          i = 4;
+ 425   2          j = 239;
+C51 COMPILER V9.54   MAIN                                                                  02/09/2026 16:13:09 PAGE 8   
+
+ 426   2      
+ 427   2            do
+ 428   2            {
+ 429   3              while(--j);
+ 430   3            }while(--i);
+ 431   2          a--;
+ 432   2        }
+ 433   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   1070    ----
+   CONSTANT SIZE    =     26    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =      5      10
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
