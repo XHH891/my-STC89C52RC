@@ -1,0 +1,91 @@
+C51 COMPILER V9.54   MAIN                                                                  01/03/2026 22:35:36 PAGE 1   
+
+
+C51 COMPILER V9.54, COMPILATION OF MODULE MAIN
+OBJECT MODULE PLACED IN .\Objects\main.obj
+COMPILER INVOKED BY: D:\keil5\k\C51\BIN\C51.EXE main.c OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTEND PRINT(.\Listings\main
+                    -.lst) TABS(2) OBJECT(.\Objects\main.obj)
+
+line level    source
+
+   1          #include <REGX52.H>
+   2          
+   3          sbit RCK = P3^5; //RCLK
+   4          sbit SCK = P3^6; //SRCLK
+   5          sbit SER = P3^4; //SER
+   6          
+   7          void _74HC595_WriteByte(unsigned char byte);
+   8          void LED_show(unsigned char a,b);
+   9          void Delay(unsigned int a);
+  10          
+  11          void main()
+  12          {
+  13   1        SCK = 0;
+  14   1        RCK = 0;
+  15   1      
+  16   1        while(1)
+  17   1        {
+  18   2          LED_show(0,0x78);
+  19   2          LED_show(1,0xfc);
+  20   2          LED_show(2,0xfe);
+  21   2          LED_show(3,0x7f);
+  22   2          LED_show(4,0x7f);
+  23   2          LED_show(5,0xfe);
+  24   2          LED_show(6,0xfc);
+  25   2          LED_show(7,0x78);
+  26   2        }
+  27   1      }
+  28          
+  29          void LED_show(unsigned char a,b)
+  30          {
+  31   1        //通过段选  位选  时延  清零的方式来消除残影
+  32   1        _74HC595_WriteByte(b); //段选
+  33   1        P0 = ~(0x80>>a);//位选
+  34   1        Delay(1);//时延
+  35   1        P0 = 0xff;//清零
+  36   1      }
+  37          
+  38          void _74HC595_WriteByte(unsigned char byte)
+  39          {
+  40   1        unsigned char i;
+  41   1        for(i=0;i<8;i++)
+  42   1        {
+  43   2          SER = byte&(0x80>>i);//通过与每一位做&得到 byte 的每一位。
+  44   2          SCK = 1;
+  45   2          SCK = 0;
+  46   2        }
+  47   1        RCK = 1;
+  48   1        RCK = 0;
+  49   1      }
+  50          
+  51          void Delay(unsigned int a)
+  52          {
+  53   1        unsigned char i,j;
+  54   1      
+C51 COMPILER V9.54   MAIN                                                                  01/03/2026 22:35:36 PAGE 2   
+
+  55   1        while(a)
+  56   1        {
+  57   2          i = 4;
+  58   2          j = 239;
+  59   2          do
+  60   2          {
+  61   3            while(--j);
+  62   3          }while(--i);
+  63   2          a--;
+  64   2        }
+  65   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    177    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----       1
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

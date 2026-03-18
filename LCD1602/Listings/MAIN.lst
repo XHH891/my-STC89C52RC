@@ -1,0 +1,104 @@
+C51 COMPILER V9.54   MAIN                                                                  02/10/2026 10:57:47 PAGE 1   
+
+
+C51 COMPILER V9.54, COMPILATION OF MODULE MAIN
+OBJECT MODULE PLACED IN .\Objects\MAIN.obj
+COMPILER INVOKED BY: D:\keil5\k\C51\BIN\C51.EXE MAIN.c OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTEND PRINT(.\Listings\MAIN
+                    -.lst) TABS(2) OBJECT(.\Objects\MAIN.obj)
+
+line level    source
+
+   1          #include <REGX52.H>
+   2          
+   3          sbit LCD_RS = P2^6;
+   4          sbit LCD_RW = P2^5;
+   5          sbit LCD_E  = P2^7;
+   6          
+   7          #define LCD_DataPort P0
+   8          
+   9          void LCD_Delay1ms();
+  10          void LCD_Showchar(unsigned char line,unsigned char column,unsigned char Char);
+  11          void LCD_Init();
+  12          void LCD_Writecommand(unsigned char command);
+  13          void LCD_Writedata(unsigned char Data);
+  14          
+  15          void main()
+  16          {
+  17   1          LCD_Init();
+  18   1          LCD_Showchar(2,3,'A');
+  19   1          while(1)
+  20   1          {
+  21   2              
+  22   2          }
+  23   1      }
+  24          
+  25          void LCD_Showchar(unsigned char line,unsigned char column,unsigned char Char)
+  26          {
+  27   1          if(line == 1)
+  28   1          {
+  29   2              LCD_Writecommand(0x80|(column-1));
+  30   2          }
+  31   1          else
+  32   1          {
+  33   2              LCD_Writecommand(0x80|(column-1)+0x40);
+  34   2          }
+  35   1          LCD_Writedata(Char);
+  36   1      }
+  37          
+  38          void LCD_Init()
+  39          {
+  40   1          LCD_Writecommand(0x38);
+  41   1          LCD_Writecommand(0x0c);
+  42   1          LCD_Writecommand(0x06);
+  43   1          LCD_Writecommand(0x01);
+  44   1      }
+  45          
+  46          void LCD_Writecommand(unsigned char command)
+  47          {
+  48   1          LCD_RS = 0;
+  49   1          LCD_RW = 0;
+  50   1          LCD_DataPort = command;
+  51   1          LCD_E = 1;
+  52   1          LCD_Delay1ms();
+  53   1          LCD_E = 0;
+  54   1          LCD_Delay1ms();
+C51 COMPILER V9.54   MAIN                                                                  02/10/2026 10:57:47 PAGE 2   
+
+  55   1      }
+  56          
+  57          void LCD_Writedata(unsigned char Data)
+  58          {
+  59   1          LCD_RS = 1;
+  60   1          LCD_RW = 0;
+  61   1          LCD_DataPort = Data;
+  62   1          LCD_E = 1;
+  63   1          LCD_Delay1ms();
+  64   1          LCD_E = 0;
+  65   1          LCD_Delay1ms();
+  66   1      }
+  67          
+  68          void LCD_Delay1ms(void) 
+  69          {
+  70   1        unsigned char data i, j;
+  71   1      
+  72   1        i = 2;
+  73   1        j = 199;
+  74   1        do
+  75   1        {
+  76   2          while (--j);
+  77   2        } while (--i);
+  78   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =     94    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----       2
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

@@ -1,0 +1,96 @@
+BL51 BANKED LINKER/LOCATER V6.22                                                        01/03/2026  22:00:04  PAGE 1
+
+
+BL51 BANKED LINKER/LOCATER V6.22, INVOKED BY:
+D:\KEIL5\K\C51\BIN\BL51.EXE .\Objects\main.obj TO .\Objects\LEDµ„’Û∆¡ PRINT (.\Listings\LEDµ„’Û∆¡.m51) RAMSIZE (256)
+
+
+MEMORY MODEL: SMALL
+
+
+INPUT MODULES INCLUDED:
+  .\Objects\main.obj (MAIN)
+  D:\KEIL5\K\C51\LIB\C51S.LIB (?C_STARTUP)
+
+
+LINK MAP OF MODULE:  .\Objects\LEDµ„’Û∆¡ (MAIN)
+
+
+            TYPE    BASE      LENGTH    RELOCATION   SEGMENT NAME
+            -----------------------------------------------------
+
+            * * * * * * *   D A T A   M E M O R Y   * * * * * * *
+            REG     0000H     0008H     ABSOLUTE     "REG BANK 0"
+            IDATA   0008H     0001H     UNIT         ?STACK
+
+            * * * * * * *   C O D E   M E M O R Y   * * * * * * *
+            CODE    0000H     0003H     ABSOLUTE     
+            CODE    0003H     002DH     UNIT         ?PR?__74HC595_WRITEBYTE?MAIN
+            CODE    0030H     000EH     UNIT         ?PR?MAIN?MAIN
+            CODE    003EH     000CH     UNIT         ?C_C51STARTUP
+
+
+
+OVERLAY MAP OF MODULE:   .\Objects\LEDµ„’Û∆¡ (MAIN)
+
+
+SEGMENT
+  +--> CALLED SEGMENT
+---------------------
+?C_C51STARTUP
+  +--> ?PR?MAIN?MAIN
+
+?PR?MAIN?MAIN
+  +--> ?PR?__74HC595_WRITEBYTE?MAIN
+
+
+
+SYMBOL TABLE OF MODULE:  .\Objects\LEDµ„’Û∆¡ (MAIN)
+
+  VALUE           TYPE          NAME
+  ----------------------------------
+
+  -------         MODULE        MAIN
+  C:0000H         SYMBOL        _ICE_DUMMY_
+  D:0080H         PUBLIC        P0
+  C:0003H         PUBLIC        __74HC595_WriteByte
+  D:00B0H         PUBLIC        P3
+  C:0030H         PUBLIC        main
+  B:00B0H.5       PUBLIC        RCK
+  B:00B0H.6       PUBLIC        SCK
+  B:00B0H.4       PUBLIC        SER
+BL51 BANKED LINKER/LOCATER V6.22                                                      01/03/2026  22:00:04  PAGE 2
+
+
+  -------         PROC          __74HC595_WRITEBYTE
+  D:0005H         SYMBOL        byte
+  -------         DO            
+  D:0003H         SYMBOL        i
+  -------         ENDDO         
+  C:0003H         LINE#         7
+  C:0005H         LINE#         8
+  C:0005H         LINE#         10
+  C:0007H         LINE#         11
+  C:0007H         LINE#         12
+  C:0023H         LINE#         13
+  C:0025H         LINE#         14
+  C:0027H         LINE#         15
+  C:002BH         LINE#         16
+  C:002DH         LINE#         17
+  C:002FH         LINE#         18
+  -------         ENDPROC       __74HC595_WRITEBYTE
+  -------         PROC          MAIN
+  C:0030H         LINE#         20
+  C:0030H         LINE#         21
+  C:0030H         LINE#         22
+  C:0032H         LINE#         23
+  C:0034H         LINE#         25
+  C:0037H         LINE#         26
+  C:003CH         LINE#         28
+  C:003CH         LINE#         29
+  C:003CH         LINE#         30
+  -------         ENDPROC       MAIN
+  -------         ENDMOD        MAIN
+
+Program Size: data=9.0 xdata=0 code=74
+LINK/LOCATE RUN COMPLETE.  0 WARNING(S),  0 ERROR(S)

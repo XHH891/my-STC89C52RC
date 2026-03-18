@@ -1,0 +1,4 @@
+".\Objects\STARTUP.obj",
+".\Objects\main.obj" 
+TO ".\Objects\LED点阵屏流动效果" 
+PRINT(".\Listings\LED点阵屏流动效果.m51") RAMSIZE(256) 

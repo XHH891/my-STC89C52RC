@@ -1,0 +1,86 @@
+C51 COMPILER V9.54   MAIN                                                                  12/31/2025 23:09:30 PAGE 1   
+
+
+C51 COMPILER V9.54, COMPILATION OF MODULE MAIN
+OBJECT MODULE PLACED IN .\Objects\main.obj
+COMPILER INVOKED BY: D:\keil5\k\C51\BIN\C51.EXE main.c OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTEND PRINT(.\Listings\main
+                    -.lst) TABS(2) OBJECT(.\Objects\main.obj)
+
+line level    source
+
+   1          //单片机向电脑发送数据
+   2          #include <REGX52.H>
+   3          
+   4          void Delay(unsigned int a);
+   5          void nixie(unsigned char a,b);
+   6          void UART_Init();
+   7          void UART_SendByte(unsigned char Byte);
+   8          
+   9          unsigned int a;
+  10          
+  11          void main()
+  12          { 
+  13   1        
+  14   1        UART_Init();
+  15   1      
+  16   1        while(1)
+  17   1        {
+  18   2          UART_SendByte(a);
+  19   2          Delay(1000);
+  20   2          a++;
+  21   2          if(a>10)
+  22   2            a=0;
+  23   2        }
+  24   1      }
+  25          
+  26          void UART_SendByte(unsigned int Byte)//发送数据
+  27          {
+*** WARNING C235 IN LINE 27 OF main.c: parameter 1: different types
+  28   1        SBUF=Byte;
+  29   1        while(TI==0);//如果数据比较多,会发送一段时间,期间TI=0,当发送完成是变为1
+  30   1        TI=0;//重置TI,为下一次做准备
+  31   1      }
+  32          
+  33          void UART_Init()//配置寄存器
+  34          {
+  35   1        SCON = 0x40;
+  36   1        PCON &= 0x7F;
+  37   1        TMOD &= 0x0F;     //设置定时器模式
+  38   1        TMOD |= 0x20;     //设置定时器模式
+  39   1        TL1 = 0xFA;     //设置定时初始值
+  40   1        TH1 = 0xFA;     //设置定时重载值
+  41   1        ET1 = 0;      //禁止定时器中断
+  42   1        TR1 = 1;      //定时器1开始计时
+  43   1      } 
+  44          
+  45          void Delay(unsigned int a)
+  46          {
+  47   1        unsigned char i,j;
+  48   1      
+  49   1        while(a)
+  50   1        {
+  51   2          i = 4;
+  52   2          j = 239;
+  53   2          do
+C51 COMPILER V9.54   MAIN                                                                  12/31/2025 23:09:30 PAGE 2   
+
+  54   2          {
+  55   3            while(--j);
+  56   3          }while(--i);
+  57   2          a--;
+  58   2        }
+  59   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =     90    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =      2    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  1 WARNING(S),  0 ERROR(S)
